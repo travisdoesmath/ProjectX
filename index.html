@@ -18,6 +18,33 @@
             position: absolute;
         }
 
+        #gridLayer {
+            pointer-events: none;
+        }
+
+        .floss703 { background-color: #66A647 }
+        .floss702 { background-color: #138D46 }
+        .floss700 { background-color: #007443 }
+        .floss973 { background-color: #FFC617 }
+        .floss743 { background-color: #FBAD31 }
+        .floss445 { background-color: #EDE66A }
+        .floss562 { background-color: #1E8061 }
+        .floss561 { background-color: #386654 }
+        .floss15 { background-color: #C0DC94 }
+        .floss352 { background-color: #F26E66 }
+        .floss606 { background-color: #EE282B }
+        .floss608 { background-color: #EF472A }
+        .floss351 { background-color: #EC404E }
+        .floss761 { background-color: #F69FA5 }
+        .flossBlanc { background-color: #FDFDFD }
+        .floss321 { background-color: #BF2148 }
+        .floss563 { background-color: #67B68E }
+
+        .completed {
+            background-color: #888;
+        }
+
+
     </style>
 </head>
 <body>
@@ -35,10 +62,12 @@
         .then(pattern => {
             pattern.forEach(p => {
                 let element = document.createElement('div')
-                element.className = 'cell';
+                element.className = `cell floss${p.color.code}`;
                 element.style.left = `${p.x * sqWidth}px`;
                 element.style.top = `${p.y * sqWidth}px`;
-                element.style.backgroundColor = p.color.color;
+                element.addEventListener('click', function() {
+                    this.classList.toggle('completed');
+                })
                 patternLayer.append(element)
 
             })
