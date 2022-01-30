@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-weight: 600;
+        }
+
         .layer {
             position: relative;
             top: 0;
@@ -13,35 +18,42 @@
         }
 
         .cell {
-            width: 10px;
-            height: 10px;
+            width: 20px;
+            height: 20px;
             position: absolute;
+            text-align: center;
+            line-height: 23px;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
 
         #gridLayer {
             pointer-events: none;
         }
 
-        .floss703 { background-color: #66A647 }
-        .floss702 { background-color: #138D46 }
-        .floss700 { background-color: #007443 }
-        .floss973 { background-color: #FFC617 }
-        .floss743 { background-color: #FBAD31 }
-        .floss445 { background-color: #EDE66A }
-        .floss562 { background-color: #1E8061 }
-        .floss561 { background-color: #386654 }
-        .floss15 { background-color: #C0DC94 }
-        .floss352 { background-color: #F26E66 }
-        .floss606 { background-color: #EE282B }
-        .floss608 { background-color: #EF472A }
-        .floss351 { background-color: #EC404E }
-        .floss761 { background-color: #F69FA5 }
-        .flossBlanc { background-color: #FDFDFD }
-        .floss321 { background-color: #BF2148 }
-        .floss563 { background-color: #67B68E }
+        .floss703 { background-color: #66A647; color: #335323; }
+        .floss702 { background-color: #138D46; color: #094623; }
+        .floss700 { background-color: #007443; color: #003a21; }
+        .floss973 { background-color: #FFC617; color: #8b6800; }
+        .floss743 { background-color: #FBAD31; color: #935b02; }
+        .floss445 { background-color: #EDE66A; color: #999112; }
+        .floss562 { background-color: #1E8061; color: #0f4030; }
+        .floss561 { background-color: #386654; color: #1c332a; }
+        .floss15 { background-color: #C0DC94; color: #668a2d; }
+        .floss352 { background-color: #F26E66; color: #9e150d; }
+        .floss606 { background-color: #EE282B; color: #800a0b; }
+        .floss608 { background-color: #EF472A; color: #821b09; }
+        .floss351 { background-color: #EC404E; color: #880d17; }
+        .floss761 { background-color: #F69FA5; color: #b9111c; }
+        .flossBlanc { background-color: #FDFDFD; color: #7e7e7e; }
+        .floss321 { background-color: #BF2148; color: #5f1024; }
+        .floss563 { background-color: #67B68E; color: #2e6046; }
 
         .completed {
             background-color: #888;
+            color: #888;
         }
 
 
@@ -53,7 +65,7 @@
         <div id='gridLayer' class='layer'></div>    
     </div>
     <script>
-        sqWidth = 10;
+        sqWidth = 20;
 
         let patternLayer = document.getElementById('patternLayer')
         let gridLayer = document.getElementById('gridLayer')
@@ -65,6 +77,7 @@
                 element.className = `cell floss${p.color.code}`;
                 element.style.left = `${p.x * sqWidth}px`;
                 element.style.top = `${p.y * sqWidth}px`;
+                element.innerText = p.color.symbol;
                 element.addEventListener('click', function() {
                     this.classList.toggle('completed');
                 })
@@ -78,7 +91,7 @@
                 element.style.left = `${i*sqWidth}px`;
                 element.style.top = 0;
                 element.style.width = `${sqWidth}px`;
-                element.style.height = '900px'
+                element.style.height = `${90*sqWidth}px`
                 element.style.borderLeft = `solid 1px #888`
                 gridLayer.append(element)
             }
@@ -88,7 +101,7 @@
                 element.style.position = 'absolute'
                 element.style.top = `${i*sqWidth}px`;
                 element.style.left = 0;
-                element.style.width = '900px'
+                element.style.width = `${90*sqWidth}px`
                 element.style.height = `${sqWidth}px`;
                 element.style.borderTop = `solid 1px #888`
                 gridLayer.append(element)
@@ -100,7 +113,7 @@
                 element.style.left = `${10*i*sqWidth}px`;
                 element.style.top = 0;
                 element.style.width = `${sqWidth}px`;
-                element.style.height = '900px'
+                element.style.height = `${90*sqWidth}px`
                 element.style.borderLeft = `solid 2px #666`
                 gridLayer.append(element)
             }
@@ -110,7 +123,7 @@
                 element.style.position = 'absolute'
                 element.style.top = `${10*i*sqWidth}px`;
                 element.style.left = 0;
-                element.style.width = '902px'
+                element.style.width = `${90*sqWidth + 2}px`
                 element.style.height = `${sqWidth}px`;
                 element.style.borderTop = `solid 2px #666`
                 gridLayer.append(element)
