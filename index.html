@@ -6,56 +6,87 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <style>
+        .layer {
+            position: relative;
+            top: 0;
+            left: 0;
+        }
+
+        .cell {
+            width: 10px;
+            height: 10px;
+            position: absolute;
+        }
 
     </style>
 </head>
-<canvas id="myCanvas" width=1001 height=1001></canvas>
 <body>
+    <div>
+        <div id='patternLayer' class='layer'></div>
+        <div id='gridLayer' class='layer'></div>    
+    </div>
     <script>
-        canvas = document.getElementById('myCanvas');
-        context = canvas.getContext('2d');
-
         sqWidth = 10;
+
+        let patternLayer = document.getElementById('patternLayer')
+        let gridLayer = document.getElementById('gridLayer')
 
         fetch('pattern.json').then(response => response.json())
         .then(pattern => {
             pattern.forEach(p => {
-                context.fillStyle = p.color.color;
-                context.fillRect(p.x * sqWidth, p.y * sqWidth, sqWidth, sqWidth);
+                let element = document.createElement('div')
+                element.className = 'cell';
+                element.style.left = `${p.x * sqWidth}px`;
+                element.style.top = `${p.y * sqWidth}px`;
+                element.style.backgroundColor = p.color.color;
+                patternLayer.append(element)
+
             })
         }).then(() => {
-            context.strokeStyle = '#555';
-            context.lineWidth = 1;
-            for (let i = 0; i < canvas.width; i += sqWidth) {
-                context.beginPath()
-                context.moveTo(i+0.5,0);
-                context.lineTo(i+0.5, canvas.height);
-                context.stroke();
-            }
-            for (let i = 0; i < canvas.height; i += sqWidth) {
-                context.beginPath()
-                context.moveTo(0,i+0.5);
-                context.lineTo(canvas.width, i+0.5);
-                context.stroke();
-                context.closePath()
+            for (let i = 0; i <= 90; i++) {
+                let element = document.createElement('div')
+                element.style.position = 'absolute'
+                element.style.left = `${i*sqWidth}px`;
+                element.style.top = 0;
+                element.style.width = `${sqWidth}px`;
+                element.style.height = '900px'
+                element.style.borderLeft = `solid 1px #888`
+                gridLayer.append(element)
             }
 
-            
+            for (let i = 0; i <= 90; i++) {
+                let element = document.createElement('div')
+                element.style.position = 'absolute'
+                element.style.top = `${i*sqWidth}px`;
+                element.style.left = 0;
+                element.style.width = '900px'
+                element.style.height = `${sqWidth}px`;
+                element.style.borderTop = `solid 1px #888`
+                gridLayer.append(element)
+            }
 
-            context.strokeStyle = '#111';
-            context.lineWidth = 2;
-            for (let i = 0; i < canvas.width; i += (10*sqWidth)) {
-                context.beginPath()
-                context.moveTo(i+0.5,0);
-                context.lineTo(i+0.5, canvas.height);
-                context.stroke();
+            for (let i = 0; i <= 9; i++) {
+                let element = document.createElement('div')
+                element.style.position = 'absolute'
+                element.style.left = `${10*i*sqWidth}px`;
+                element.style.top = 0;
+                element.style.width = `${sqWidth}px`;
+                element.style.height = '900px'
+                element.style.borderLeft = `solid 2px #666`
+                gridLayer.append(element)
             }
-            for (let i = 0; i < canvas.height; i += (10*sqWidth)) {
-                context.beginPath()
-                context.moveTo(0,i+0.5);
-                context.lineTo(canvas.width, i+0.5);
-                context.stroke();
+
+            for (let i = 0; i <= 9; i++) {
+                let element = document.createElement('div')
+                element.style.position = 'absolute'
+                element.style.top = `${10*i*sqWidth}px`;
+                element.style.left = 0;
+                element.style.width = '902px'
+                element.style.height = `${sqWidth}px`;
+                element.style.borderTop = `solid 2px #666`
+                gridLayer.append(element)
             }
+
         })
 
     </script>
