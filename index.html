@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+
+    </style>
+</head>
+<canvas id="myCanvas" width=1001 height=1001></canvas>
+<body>
+    <script>
+        canvas = document.getElementById('myCanvas');
+        context = canvas.getContext('2d');
+
+        sqWidth = 10;
+
+        fetch('pattern.json').then(response => response.json())
+        .then(pattern => {
+            pattern.forEach(p => {
+                context.fillStyle = p.color.color;
+                context.fillRect(p.x * sqWidth, p.y * sqWidth, sqWidth, sqWidth);
+            })
+        }).then(() => {
+            context.strokeStyle = '#555';
+            context.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += sqWidth) {
+                context.beginPath()
+                context.moveTo(i+0.5,0);
+                context.lineTo(i+0.5, canvas.height);
+                context.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += sqWidth) {
+                context.beginPath()
+                context.moveTo(0,i+0.5);
+                context.lineTo(canvas.width, i+0.5);
+                context.stroke();
+                context.closePath()
+            }
+
+            
+
+            context.strokeStyle = '#111';
+            context.lineWidth = 2;
+            for (let i = 0; i < canvas.width; i += (10*sqWidth)) {
+                context.beginPath()
+                context.moveTo(i+0.5,0);
+                context.lineTo(i+0.5, canvas.height);
+                context.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += (10*sqWidth)) {
+                context.beginPath()
+                context.moveTo(0,i+0.5);
+                context.lineTo(canvas.width, i+0.5);
+                context.stroke();
+            }
+        })
+
+    </script>
+</body>
+</html>
