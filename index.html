@@ -29,6 +29,18 @@
             user-select: none;
         }
 
+        .legend {
+            width: 80px;
+            height: 40px;
+            position: absolute;
+            text-align: center;
+            line-height: 40px;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
         #gridLayer {
             pointer-events: none;
         }
@@ -63,16 +75,26 @@
     <div>
         <div id='patternLayer' class='layer'></div>
         <div id='gridLayer' class='layer'></div>    
+        <div id='overlay' class='layer'></div>
     </div>
     <script>
         sqWidth = 20;
 
         let patternLayer = document.getElementById('patternLayer')
         let gridLayer = document.getElementById('gridLayer')
+        let overlay = document.getElementById('overlay')
+
+        let flossCounts = {}
 
         fetch('pattern.json').then(response => response.json())
         .then(pattern => {
+            console.log(pattern);
             pattern.forEach(p => {
+                if (p.color.code in flossCounts) {
+                    flossCounts[p.color.code] += 1
+                } else {
+                    flossCounts[p.color.code] = 1
+                }
                 let element = document.createElement('div')
                 element.className = `cell floss${p.color.code}`;
                 element.style.left = `${p.x * sqWidth}px`;
@@ -83,6 +105,18 @@
                 })
                 patternLayer.append(element)
 
+            })
+
+            console.log(flossCounts)
+            flossLegendOrder = Object.keys(flossCounts).sort((a, b) => flossCounts[b] - flossCounts[a])
+
+            flossLegendOrder.forEach((l, i) => {
+                let element = document.createElement('div');
+                element.className = `legend floss${l}`;
+                element.style.left = `5px`;
+                element.style.top = `${5 + i*50}px`;
+                element.innerText = l
+                overlay.append(element);
             })
         }).then(() => {
             for (let i = 0; i <= 90; i++) {
