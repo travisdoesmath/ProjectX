@@ -33,12 +33,11 @@
             left: 0;
         }
 
-        .legend {
-            width: 80px;
-            height: 40px;
+        .legendItem {
             position: absolute;
             text-align: center;
-            line-height: 40px;
+            line-height: 250%;
+            pointer-events: all;
             -moz-user-select: none;
             -webkit-user-select: none;
             -ms-user-select: none;
@@ -60,6 +59,16 @@
 
         #overlay {
             position: fixed;
+            height: 100%;
+            width: 100%;
+            pointer-events: none;
+        }
+
+        #legend {
+            background-color: #444;
+            position: relative;
+            left: 0;
+            height: 100%;
         }
 
         .floss703 { fill: #66A647; color: #335323; }
@@ -86,12 +95,13 @@
 
 
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.3.0/d3.js" integrity="sha512-nkC97gUNsbPjaWQm5GVpreTVy9IJO+z13y1M8mM+1BJRjfp9sz+1ixWu4+1mOMUzIt72pVD9rwjxJKV8LdlvjA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
     <div>
         <svg id="pattern"></svg>
-        <div id='overlay'></div>
+        <div id='overlay'>
+            <div id='legend'></div>
+        </div>
     </div>
     <script>
         function hexToRgb(hex) {
@@ -140,6 +150,7 @@
         let previousTouch;
         let previousTwoTouch;
         let scaling = false;
+        let selected;
         svg.addEventListener('touchstart', function(event) {
             if (event.touches.length == 2) {
                 scaling = true;
@@ -213,6 +224,7 @@
         })
         svg.appendChild(patternLayer)
         let overlay = document.getElementById('overlay')
+        let legend = document.getElementById('legend');
 
         let flossCodes = {
             703: {color: '#66A647', symbol: '\u2229' },
@@ -247,7 +259,7 @@
                 }
                 let g = document.createElementNS("http://www.w3.org/2000/svg",'g')
                 g.setAttribute('transform', `translate(${p.x * sqWidth}, ${p.y * sqWidth})`)
-                g.setAttribute('class', `noselect`)
+                g.setAttribute('class', `cell floss${p.color.code} noselect`)
                 g.addEventListener('mouseup', function(event) {
                     let startX = mousedownPosition[0]
                     let startY = mousedownPosition[1]
@@ -282,15 +294,54 @@
             console.log(flossCounts)
             flossLegendOrder = Object.keys(flossCounts).sort((a, b) => flossCounts[b] - flossCounts[a])
 
+            let nLegendItems = Object.keys(flossCounts).length
+            let legendItemHeight = window.innerHeight / nLegendItems - 10
+            legend.style.width = `${2*legendItemHeight + 20}px`;
+
             flossLegendOrder.forEach((l, i) => {
                 let element = document.createElement('div');
-                element.className = `legend floss${l}`;
+                element.className = `legendItem floss${l}`;
                 element.style.backgroundColor = flossCodes[l].color
                 element.style.color = hexDarker(flossCodes[l].color)
-                element.style.left = `5px`;
-                element.style.top = `${5 + i*50}px`;
+                element.style.left = `10px`;
+                element.style.top = `${5 + i*(legendItemHeight+10)}px`;
+                element.style.height = `${legendItemHeight}px`;
+                element.style.width = `${2*legendItemHeight}px`;
+                element.style.fontSize = `${0.4*legendItemHeight}px`;
                 element.innerText = `${l} ${flossCodes[l].symbol}`
-                overlay.append(element);
+                element.addEventListener('click', function() {
+                    console.log(this)
+                    if (!selected) {
+                        selected = l
+                        els = document.getElementsByClassName('cell')
+                        for (let j = 0; j < els.length; j++) {
+                            el = els[j]
+                            if (![...el.classList].includes(`floss${l}`)) {
+                                el.style.opacity = 0.25
+                            }
+                        }
+
+                        els = document.getElementsByClassName('legendItem')
+                        for (let j = 0; j < els.length; j++) {
+                            el = els[j]
+                            if (![...el.classList].includes(`floss${l}`)) {
+                                el.style.opacity = 0.25
+                            }
+                        }
+
+                    } else {
+                        selected = null
+                        els = document.getElementsByClassName('cell')
+                        for (let j = 0; j < els.length; j++) {
+                            els[j].style.opacity = 1
+                        }
+                        els = document.getElementsByClassName('legendItem')
+                        for (let j = 0; j < els.length; j++) {
+                            els[j].style.opacity = 1
+                        }
+                    }
+                })
+                legend.append(element);
             })
         }).then(() => {
             for (let i = 0; i <= 90; i++) {
