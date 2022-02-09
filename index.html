@@ -6,6 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <style>
+
+        html, body {
+            /* prevent pull-to-refresh on Chrome for Android */
+            overscroll-behavior-y: contain; 
+        }
+
         body {
             font-family: Arial, Helvetica, sans-serif;
             font-weight: 600;
@@ -132,21 +138,51 @@
         svg.addEventListener("mouseup", () => {mousedown = false;})
         svg.addEventListener("mouseleave", () => {mousedown = false})
         let previousTouch;
-        svg.addEventListener('touchmove', function(event) {
-            const touch = event.touches[0];
-
-            if (previousTouch) {
-                event.movementX = touch.pageX - previousTouch.pageX;
-                event.movementY = touch.pageY - previousTouch.pageY
+        let previousTwoTouch;
+        let scaling = false;
+        svg.addEventListener('touchstart', function(event) {
+            if (event.touches.length == 2) {
+                scaling = true;
+                event.preventDefault();
+                console.log(event.touches);
             }
-            let transform = patternLayer.transform.baseVal.getItem(0).matrix
-            let currentScale = transform.a
-            let currentTranslateX = transform.e
-            let currentTranslateY = transform.f
-            patternLayer.setAttribute('transform', `matrix(${currentScale} 0 0 ${currentScale} ${currentTranslateX + event.movementX} ${currentTranslateY + event.movementY})`)
-            
-            previousTouch = touch;
         })
+        svg.addEventListener('touchmove', function(event) {
+            event.preventDefault;
+            if (event.touches.length == 1) {
+                const touch = event.touches[0];
+
+                if (previousTouch) {
+                    event.movementX = touch.pageX - previousTouch.pageX;
+                    event.movementY = touch.pageY - previousTouch.pageY
+                    let transform = patternLayer.transform.baseVal.getItem(0).matrix
+                    let currentScale = transform.a
+                    let currentTranslateX = transform.e
+                    let currentTranslateY = transform.f
+                    patternLayer.setAttribute('transform', `matrix(${currentScale} 0 0 ${currentScale} ${currentTranslateX + event.movementX} ${currentTranslateY + event.movementY})`)
+                }
+
+                previousTouch = touch;
+            } else if (event.touches.length == 2 && scaling) {
+                if (previousTwoTouch) {
+                    let transform = patternLayer.transform.baseVal.getItem(0).matrix
+                    let a = transform.a
+                    let e = transform.e
+                    let f = transform.f
+                    let newScale = Math.hypot(event.touches[0].pageX - event.touches[1].pageX, event.touches[0].pageY - event.touches[1].pageY) / 
+                                Math.hypot(previousTwoTouch[0].pageX - previousTwoTouch[1].pageX, previousTwoTouch[0].pageY - previousTwoTouch[1].pageY)
+                    let centerX = 0.5*(event.touches[0].pageX + event.touches[1].pageX)
+                    let centerY = 0.5*(event.touches[0].pageY + event.touches[1].pageY)
+                    let e_new = centerX - newScale * (centerX - e)
+                    let f_new = centerY - newScale * (centerY - f)
+                    patternLayer.setAttribute('transform', `matrix(${newScale * a} 0 0 ${newScale * a} ${e_new} ${f_new})`)
+                }
+
+                previousTwoTouch = event.touches;
+
+            }
+        })
+        svg.addEventListener('touchend', () => {previousTouch = null; previousTwoTouch = null})
         svg.addEventListener("mousemove", function(event) {
             mousemoved = true
             if (mousedown) {
