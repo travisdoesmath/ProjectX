@@ -120,7 +120,7 @@
         let svg = document.getElementById('pattern')
         let patternLayer = document.createElementNS("http://www.w3.org/2000/svg",'g')
         patternLayer.setAttribute('id', 'patternLayer')
-        patternLayer.setAttribute('transform', 'translate(0,0)')
+        patternLayer.setAttribute('transform', 'matrix(1 0 0 1 0 0)')
         let mousedown = false
         let mousemoved = false
         let mousedownPosition = []
@@ -135,20 +135,31 @@
             mousemoved = true
             if (mousedown) {
                 let transform = patternLayer.transform.baseVal.getItem(0).matrix
+                let currentScale = transform.a
                 let currentTranslateX = transform.e
                 let currentTranslateY = transform.f
-                patternLayer.setAttribute('transform', `translate(${currentTranslateX + event.movementX},${currentTranslateY + event.movementY})`)
+                patternLayer.setAttribute('transform', `matrix(${currentScale} 0 0 ${currentScale} ${currentTranslateX + event.movementX} ${currentTranslateY + event.movementY})`)
             }
         })
         let scale = 1
         svg.addEventListener("wheel", function(event) {
+            console.log(event);
             event.preventDefault();
 
-            scale += event.deltaY * -0.000625;
+            //console.log(event.deltaY);
+
+            scale *= 2**(-event.deltaY/500);
 
             scale = Math.min(Math.max(0.125, scale), 4);
 
-            patternLayer.setAttribute('transform', `scale(${scale})`);
+            let transform = patternLayer.transform.baseVal.getItem(0).matrix
+            let a = transform.a
+            let e = transform.e
+            let f = transform.f
+            let e_new = event.pageX - (scale/a) * (event.pageX - e)
+            let f_new = event.pageY - (scale/a) * (event.pageY - f)
+            patternLayer.setAttribute('transform', `matrix(${scale} 0 0 ${scale} ${e_new} ${f_new})`)
+
         })
         svg.appendChild(patternLayer)
         let overlay = document.getElementById('overlay')
