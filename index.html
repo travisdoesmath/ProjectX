@@ -9,24 +9,22 @@
         body {
             font-family: Arial, Helvetica, sans-serif;
             font-weight: 600;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+        }
+
+        .noselect {
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
 
         .layer {
             position: relative;
             top: 0;
             left: 0;
-        }
-
-        .cell {
-            width: 20px;
-            height: 20px;
-            position: absolute;
-            text-align: center;
-            line-height: 23px;
-            -moz-user-select: none;
-            -webkit-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
         }
 
         .legend {
@@ -45,44 +43,135 @@
             pointer-events: none;
         }
 
-        .floss703 { background-color: #66A647; color: #335323; }
-        .floss702 { background-color: #138D46; color: #094623; }
-        .floss700 { background-color: #007443; color: #003a21; }
-        .floss973 { background-color: #FFC617; color: #8b6800; }
-        .floss743 { background-color: #FBAD31; color: #935b02; }
-        .floss445 { background-color: #EDE66A; color: #999112; }
-        .floss562 { background-color: #1E8061; color: #0f4030; }
-        .floss561 { background-color: #386654; color: #1c332a; }
-        .floss15 { background-color: #C0DC94; color: #668a2d; }
-        .floss352 { background-color: #F26E66; color: #9e150d; }
-        .floss606 { background-color: #EE282B; color: #800a0b; }
-        .floss608 { background-color: #EF472A; color: #821b09; }
-        .floss351 { background-color: #EC404E; color: #880d17; }
-        .floss761 { background-color: #F69FA5; color: #b9111c; }
-        .flossBlanc { background-color: #FDFDFD; color: #7e7e7e; }
-        .floss321 { background-color: #BF2148; color: #5f1024; }
-        .floss563 { background-color: #67B68E; color: #2e6046; }
+        #pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            shape-rendering: crispEdges;
+            width: 100%;
+            height: 100%;
+        }
+
+        #overlay {
+            position: fixed;
+        }
+
+        .floss703 { fill: #66A647; color: #335323; }
+        .floss702 { fill: #138D46; color: #094623; }
+        .floss700 { fill: #007443; color: #003a21; }
+        .floss973 { fill: #FFC617; color: #8b6800; }
+        .floss743 { fill: #FBAD31; color: #935b02; }
+        .floss445 { fill: #EDE66A; color: #999112; }
+        .floss562 { fill: #1E8061; color: #0f4030; }
+        .floss561 { fill: #386654; color: #1c332a; }
+        .floss15 { fill: #C0DC94; color: #668a2d; }
+        .floss352 { fill: #F26E66; color: #9e150d; }
+        .floss606 { fill: #EE282B; color: #800a0b; }
+        .floss608 { fill: #EF472A; color: #821b09; }
+        .floss351 { fill: #EC404E; color: #880d17; }
+        .floss761 { fill: #F69FA5; color: #b9111c; }
+        .flossBlanc { fill: #FDFDFD; color: #7e7e7e; }
+        .floss321 { fill: #BF2148; color: #5f1024; }
+        .floss563 { fill: #67B68E; color: #2e6046; }
 
         .completed {
-            background-color: #888;
-            color: #888;
+            fill: #888 !important;
         }
 
 
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.3.0/d3.js" integrity="sha512-nkC97gUNsbPjaWQm5GVpreTVy9IJO+z13y1M8mM+1BJRjfp9sz+1ixWu4+1mOMUzIt72pVD9rwjxJKV8LdlvjA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
     <div>
-        <div id='patternLayer' class='layer'></div>
-        <div id='gridLayer' class='layer'></div>    
-        <div id='overlay' class='layer'></div>
+        <svg id="pattern"></svg>
+        <div id='overlay'></div>
     </div>
     <script>
+        function hexToRgb(hex) {
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        function hexDesaturate(hex) {
+            let lambda = 0.5
+            let rgb = hexToRgb(hex);
+            let intensity = 0.3 * rgb.r + 0.59 * rgb.g + 0.11 * rgb.b;
+            return `rgb(${intensity * lambda + rgb.r * (1 - lambda)},${intensity * lambda + rgb.g * (1 - lambda)},${intensity * lambda + rgb.b * (1 - lambda)})`;
+        }
+
+        function hexWashout(hex) {
+            let rgb = hexToRgb(hex);
+            return `rgb(${0.5*(rgb.r + 255)},${0.5*(rgb.g + 255)},${0.5*(rgb.b + 255)})`
+        }
+
+        function hexDarker(hex) {
+            let lambda = 0.6
+            let rgb = hexToRgb(hex);
+            return `rgb(${lambda * rgb.r},${lambda * rgb.g},${lambda * rgb.b})`
+        }
+
         sqWidth = 20;
 
-        let patternLayer = document.getElementById('patternLayer')
-        let gridLayer = document.getElementById('gridLayer')
+        let svg = document.getElementById('pattern')
+        let patternLayer = document.createElementNS("http://www.w3.org/2000/svg",'g')
+        patternLayer.setAttribute('id', 'patternLayer')
+        patternLayer.setAttribute('transform', 'translate(0,0)')
+        let mousedown = false
+        let mousemoved = false
+        let mousedownPosition = []
+        svg.addEventListener("mousedown", event => {
+            mousedown = true; 
+            mousemoved = false;
+            mousedownPosition = [event.pageX, event.pageY]
+        })
+        svg.addEventListener("mouseup", () => {mousedown = false;})
+        svg.addEventListener("mouseleave", () => {mousedown = false})
+        svg.addEventListener("mousemove", function(event) {
+            mousemoved = true
+            if (mousedown) {
+                let transform = patternLayer.transform.baseVal.getItem(0).matrix
+                let currentTranslateX = transform.e
+                let currentTranslateY = transform.f
+                patternLayer.setAttribute('transform', `translate(${currentTranslateX + event.movementX},${currentTranslateY + event.movementY})`)
+            }
+        })
+        let scale = 1
+        svg.addEventListener("wheel", function(event) {
+            event.preventDefault();
+
+            scale += event.deltaY * -0.000625;
+
+            scale = Math.min(Math.max(0.125, scale), 4);
+
+            patternLayer.setAttribute('transform', `scale(${scale})`);
+        })
+        svg.appendChild(patternLayer)
         let overlay = document.getElementById('overlay')
+
+        let flossCodes = {
+            703: {color: '#66A647', symbol: '\u2229' },
+            702: {color: '#138D46', symbol: '/' },
+            700: {color: '#007443', symbol: '+' },
+            973: {color: '#FFC617', symbol: '>' },
+            743: {color: '#FBAD31', symbol: '\u2a2f' },
+            445: {color: '#EDE66A', symbol: 'S' },
+            562: {color: '#1E8061', symbol: 'H' },
+            561: {color: '#386654', symbol: 'Z' },
+            15: {color: '#C0DC94', symbol: '-' },
+            352: {color: '#F26E66', symbol: '\u2192' },
+            606: {color: '#EE282B', symbol: '\u222a' },
+            608: {color: '#EF472A', symbol: '|' },
+            351: {color: '#EC404E', symbol: '<' },
+            761: {color: '#F69FA5', symbol: '\ua7ae' },
+            Blanc: {color: '#FDFDFD', symbol: '\u25cb' },
+            321: {color: '#BF2148', symbol: '\u2191' },
+            563: {color: '#67B68E', symbol: '\\' }
+        }
 
         let flossCounts = {}
 
@@ -95,15 +184,37 @@
                 } else {
                     flossCounts[p.color.code] = 1
                 }
-                let element = document.createElement('div')
-                element.className = `cell floss${p.color.code}`;
-                element.style.left = `${p.x * sqWidth}px`;
-                element.style.top = `${p.y * sqWidth}px`;
-                element.innerText = p.color.symbol;
-                element.addEventListener('click', function() {
-                    this.classList.toggle('completed');
+                let g = document.createElementNS("http://www.w3.org/2000/svg",'g')
+                g.setAttribute('transform', `translate(${p.x * sqWidth}, ${p.y * sqWidth})`)
+                g.setAttribute('class', `noselect`)
+                g.addEventListener('mouseup', function(event) {
+                    let startX = mousedownPosition[0]
+                    let startY = mousedownPosition[1]
+                    let dist = Math.hypot(event.pageX - startX, event.pageY - startY)
+                    if (dist < 5) {
+                        for (let i = 0; i<this.children.length; i++) {
+                            var child = this.children[i];
+                            child.classList.toggle('completed');
+                        }
+                    }
                 })
-                patternLayer.append(element)
+
+                let rect = document.createElementNS("http://www.w3.org/2000/svg",'rect')
+                rect.setAttribute('fill', flossCodes[p.color.code].color)
+                rect.setAttribute('width', `${sqWidth}`);
+                rect.setAttribute('height', `${sqWidth}`);
+
+                let text = document.createElementNS("http://www.w3.org/2000/svg",'text')
+                text.setAttribute('x', 0.5*sqWidth)
+                text.setAttribute('y', 0.5*sqWidth)
+                text.setAttribute('text-anchor', 'middle')
+                text.setAttribute('dominant-baseline', 'middle')
+                text.setAttribute('fill', hexDarker(flossCodes[p.color.code].color))
+                text.appendChild(document.createTextNode(p.color.symbol))
+                
+                g.appendChild(rect)
+                g.appendChild(text)
+                patternLayer.appendChild(g)
 
             })
 
@@ -113,56 +224,55 @@
             flossLegendOrder.forEach((l, i) => {
                 let element = document.createElement('div');
                 element.className = `legend floss${l}`;
+                element.style.backgroundColor = flossCodes[l].color
+                element.style.color = hexDarker(flossCodes[l].color)
                 element.style.left = `5px`;
                 element.style.top = `${5 + i*50}px`;
-                element.innerText = l
+                element.innerText = `${l} ${flossCodes[l].symbol}`
                 overlay.append(element);
             })
         }).then(() => {
             for (let i = 0; i <= 90; i++) {
-                let element = document.createElement('div')
-                element.style.position = 'absolute'
-                element.style.left = `${i*sqWidth}px`;
-                element.style.top = 0;
-                element.style.width = `${sqWidth}px`;
-                element.style.height = `${90*sqWidth}px`
-                element.style.borderLeft = `solid 1px #888`
-                gridLayer.append(element)
+                let element = document.createElementNS("http://www.w3.org/2000/svg",'line')
+                element.setAttribute('x1', i*sqWidth)
+                element.setAttribute('y1', 0)
+                element.setAttribute('x2', i*sqWidth)
+                element.setAttribute('y1', 90*sqWidth)
+                element.setAttribute('stroke', '#666')
+                patternLayer.appendChild(element)
             }
 
             for (let i = 0; i <= 90; i++) {
-                let element = document.createElement('div')
-                element.style.position = 'absolute'
-                element.style.top = `${i*sqWidth}px`;
-                element.style.left = 0;
-                element.style.width = `${90*sqWidth}px`
-                element.style.height = `${sqWidth}px`;
-                element.style.borderTop = `solid 1px #888`
-                gridLayer.append(element)
+                let element = document.createElementNS("http://www.w3.org/2000/svg",'line')
+                element.setAttribute('y1', i*sqWidth)
+                element.setAttribute('x1', 0)
+                element.setAttribute('y2', i*sqWidth)
+                element.setAttribute('x1', 90*sqWidth)
+                element.setAttribute('stroke', '#666')
+                patternLayer.appendChild(element)
             }
 
             for (let i = 0; i <= 9; i++) {
-                let element = document.createElement('div')
-                element.style.position = 'absolute'
-                element.style.left = `${10*i*sqWidth}px`;
-                element.style.top = 0;
-                element.style.width = `${sqWidth}px`;
-                element.style.height = `${90*sqWidth}px`
-                element.style.borderLeft = `solid 2px #666`
-                gridLayer.append(element)
+                let element = document.createElementNS("http://www.w3.org/2000/svg",'line')
+                element.setAttribute('x1', 10*i*sqWidth)
+                element.setAttribute('y1', 0)
+                element.setAttribute('x2', 10*i*sqWidth)
+                element.setAttribute('y1', 90*sqWidth)
+                element.setAttribute('stroke', '#666')
+                element.setAttribute('stroke-width', '2px')
+                patternLayer.appendChild(element)
             }
 
             for (let i = 0; i <= 9; i++) {
-                let element = document.createElement('div')
-                element.style.position = 'absolute'
-                element.style.top = `${10*i*sqWidth}px`;
-                element.style.left = 0;
-                element.style.width = `${90*sqWidth + 2}px`
-                element.style.height = `${sqWidth}px`;
-                element.style.borderTop = `solid 2px #666`
-                gridLayer.append(element)
+                let element = document.createElementNS("http://www.w3.org/2000/svg",'line')
+                element.setAttribute('y1', 10*i*sqWidth)
+                element.setAttribute('x1', 0)
+                element.setAttribute('y2', 10*i*sqWidth)
+                element.setAttribute('x1', 90*sqWidth)
+                element.setAttribute('stroke', '#666')
+                element.setAttribute('stroke-width', '2px')
+                patternLayer.appendChild(element)
             }
-
         })
 
     </script>
