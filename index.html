@@ -131,6 +131,22 @@
         })
         svg.addEventListener("mouseup", () => {mousedown = false;})
         svg.addEventListener("mouseleave", () => {mousedown = false})
+        let previousTouch;
+        svg.addEventListener('touchmove', function(event) {
+            const touch = event.touches[0];
+
+            if (previousTouch) {
+                event.movementX = touch.pageX - previousTouch.pageX;
+                event.movementY = touch.pageY - previousTouch.pageY
+            }
+            let transform = patternLayer.transform.baseVal.getItem(0).matrix
+            let currentScale = transform.a
+            let currentTranslateX = transform.e
+            let currentTranslateY = transform.f
+            patternLayer.setAttribute('transform', `matrix(${currentScale} 0 0 ${currentScale} ${currentTranslateX + event.movementX} ${currentTranslateY + event.movementY})`)
+            
+            previousTouch = touch;
+        })
         svg.addEventListener("mousemove", function(event) {
             mousemoved = true
             if (mousedown) {
@@ -145,8 +161,6 @@
         svg.addEventListener("wheel", function(event) {
             console.log(event);
             event.preventDefault();
-
-            //console.log(event.deltaY);
 
             scale *= 2**(-event.deltaY/500);
 
