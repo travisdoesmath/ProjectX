@@ -52,7 +52,7 @@
             position: fixed;
             top: 0;
             left: 0;
-            shape-rendering: crispEdges;
+            /* shape-rendering: crispEdges; */
             width: 100%;
             height: 100%;
         }
@@ -104,6 +104,8 @@
         </div>
     </div>
     <script>
+        let svgns = "http://www.w3.org/2000/svg"
+
         function hexToRgb(hex) {
             var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
             return result ? {
@@ -134,7 +136,10 @@
         sqWidth = 20;
 
         let svg = document.getElementById('pattern')
-        let patternLayer = document.createElementNS("http://www.w3.org/2000/svg",'g')
+        let svgHeight = svg.clientHeight
+        let svgWidth = svg.clientWidth
+
+        let patternLayer = document.createElementNS(svgns,'g')
         patternLayer.setAttribute('id', 'patternLayer')
         patternLayer.setAttribute('transform', 'matrix(1 0 0 1 0 0)')
         let mousedown = false
@@ -170,6 +175,7 @@
                     let currentScale = transform.a
                     let currentTranslateX = transform.e
                     let currentTranslateY = transform.f
+                    updateLabels(currentScale, currentTranslateX + event.movementX, currentTranslateY + event.movementY);
                     patternLayer.setAttribute('transform', `matrix(${currentScale} 0 0 ${currentScale} ${currentTranslateX + event.movementX} ${currentTranslateY + event.movementY})`)
                 }
 
@@ -186,6 +192,7 @@
                     let centerY = 0.5*(event.touches[0].pageY + event.touches[1].pageY)
                     let e_new = centerX - newScale * (centerX - e)
                     let f_new = centerY - newScale * (centerY - f)
+                    updateLabels(newScale * a, e_new, f_new);
                     patternLayer.setAttribute('transform', `matrix(${newScale * a} 0 0 ${newScale * a} ${e_new} ${f_new})`)
                 }
 
@@ -201,9 +208,26 @@
                 let currentScale = transform.a
                 let currentTranslateX = transform.e
                 let currentTranslateY = transform.f
+                updateLabels(currentScale, currentTranslateX + event.movementX, currentTranslateY + event.movementY)
                 patternLayer.setAttribute('transform', `matrix(${currentScale} 0 0 ${currentScale} ${currentTranslateX + event.movementX} ${currentTranslateY + event.movementY})`)
             }
         })
+
+        function updateLabels(scale, x, y) {
+            // let xlabels = document.getElementsByClassName('xlabel')
+            // for (let i = 0; i < xlabels.length; i++) {
+            //     xlabels[i].style.transform = `translate(${0}px, ${Math.max(0, -y/scale)}px)`
+            // }
+            let xlabels = document.querySelectorAll('.xlabel')
+            xlabels.forEach(label => {
+                label.style.transform = `translate(${0}px, ${Math.max(0, -y/scale)}px)`
+            })
+            let ylabels = document.getElementsByClassName('ylabel')
+            for (let i = 0; i < ylabels.length; i++) {
+                ylabels[i].style.transform = `translate(${Math.min(9/8*svgWidth - 20, (svgWidth-x)/scale - 20)}px, 0px)`
+            }
+        }
+
         let scale = 1
         svg.addEventListener("wheel", function(event) {
             console.log(event);
@@ -220,6 +244,7 @@
             let e_new = event.pageX - (scale/a) * (event.pageX - e)
             let f_new = event.pageY - (scale/a) * (event.pageY - f)
             patternLayer.setAttribute('transform', `matrix(${scale} 0 0 ${scale} ${e_new} ${f_new})`)
+            updateLabels(scale, e_new, f_new)
 
         })
         svg.appendChild(patternLayer)
@@ -248,6 +273,23 @@
 
         let flossCounts = {}
 
+        function updateLegend() {
+            let legendItems = document.getElementsByClassName('legendItem');
+            let nLegendItems = legendItems.length
+            let legendItemHeight = window.innerHeight / nLegendItems - 10;
+            let legend = document.getElementById('legend')
+            legend.style.width = `${2*legendItemHeight + 20}px`;
+            for (let i = 0; i < legendItems.length; i++) {
+                legendItems[i].style.top = `${5 + i*(legendItemHeight+10)}px`;
+                legendItems[i].style.height = `${legendItemHeight}px`;
+                legendItems[i].style.width = `${2*legendItemHeight}px`;
+                legendItems[i].style.fontSize = `${0.4*legendItemHeight}px`;
+
+            }
+        }
+
+        window.addEventListener('resize', updateLegend)
+
         fetch('pattern.json').then(response => response.json())
         .then(pattern => {
             console.log(pattern);
@@ -257,7 +299,7 @@
                 } else {
                     flossCounts[p.color.code] = 1
                 }
-                let g = document.createElementNS("http://www.w3.org/2000/svg",'g')
+                let g = document.createElementNS(svgns,'g')
                 g.setAttribute('transform', `translate(${p.x * sqWidth}, ${p.y * sqWidth})`)
                 g.setAttribute('class', `cell floss${p.color.code} noselect`)
                 g.addEventListener('mouseup', function(event) {
@@ -272,12 +314,12 @@
                     }
                 })
 
-                let rect = document.createElementNS("http://www.w3.org/2000/svg",'rect')
+                let rect = document.createElementNS(svgns,'rect')
                 rect.setAttribute('fill', flossCodes[p.color.code].color)
                 rect.setAttribute('width', `${sqWidth}`);
                 rect.setAttribute('height', `${sqWidth}`);
 
-                let text = document.createElementNS("http://www.w3.org/2000/svg",'text')
+                let text = document.createElementNS(svgns,'text')
                 text.setAttribute('x', 0.5*sqWidth)
                 text.setAttribute('y', 0.5*sqWidth)
                 text.setAttribute('text-anchor', 'middle')
@@ -345,46 +387,68 @@
             })
         }).then(() => {
             for (let i = 0; i <= 90; i++) {
-                let element = document.createElementNS("http://www.w3.org/2000/svg",'line')
-                element.setAttribute('x1', i*sqWidth)
-                element.setAttribute('y1', 0)
-                element.setAttribute('x2', i*sqWidth)
-                element.setAttribute('y1', 90*sqWidth)
-                element.setAttribute('stroke', '#666')
-                patternLayer.appendChild(element)
+                let line = document.createElementNS(svgns,'line')
+                line.setAttribute('x1', 0.5*Math.round(2*i*sqWidth))
+                line.setAttribute('y1', 0)
+                line.setAttribute('x2', 0.5*Math.round(2*i*sqWidth))
+                line.setAttribute('y1', 90*sqWidth)
+                line.setAttribute('stroke', '#666')
+                patternLayer.appendChild(line)
             }
 
             for (let i = 0; i <= 90; i++) {
-                let element = document.createElementNS("http://www.w3.org/2000/svg",'line')
-                element.setAttribute('y1', i*sqWidth)
-                element.setAttribute('x1', 0)
-                element.setAttribute('y2', i*sqWidth)
-                element.setAttribute('x1', 90*sqWidth)
-                element.setAttribute('stroke', '#666')
-                patternLayer.appendChild(element)
+                let line = document.createElementNS(svgns,'line')
+                line.setAttribute('y1', 0.5*Math.round(2*i*sqWidth))
+                line.setAttribute('x1', 0)
+                line.setAttribute('y2', 0.5*Math.round(2*i*sqWidth))
+                line.setAttribute('x1', 90*sqWidth)
+                line.setAttribute('stroke', '#666')
+                patternLayer.appendChild(line)
             }
 
             for (let i = 0; i <= 9; i++) {
-                let element = document.createElementNS("http://www.w3.org/2000/svg",'line')
-                element.setAttribute('x1', 10*i*sqWidth)
-                element.setAttribute('y1', 0)
-                element.setAttribute('x2', 10*i*sqWidth)
-                element.setAttribute('y1', 90*sqWidth)
-                element.setAttribute('stroke', '#666')
-                element.setAttribute('stroke-width', '2px')
-                patternLayer.appendChild(element)
+                let line = document.createElementNS(svgns,'line')
+                line.setAttribute('x1', 0.5*Math.round(20*i*sqWidth))
+                line.setAttribute('y1', 0)
+                line.setAttribute('x2', 0.5*Math.round(20*i*sqWidth))
+                line.setAttribute('y1', 90*sqWidth)
+                line.setAttribute('stroke', '#666')
+                line.setAttribute('stroke-width', '2px')
+                patternLayer.appendChild(line)
+                if (i !== 0) {
+                    let gridNumber = document.createElementNS(svgns, 'text')
+                    gridNumber.setAttribute('class', 'noselect xlabel')
+                    gridNumber.innerHTML = `${10*i}`
+                    gridNumber.setAttribute('x', 0.5*Math.round((20*i-2)*sqWidth)+2)
+                    gridNumber.setAttribute('y', 15)
+                    gridNumber.setAttribute('fill', '#666')
+                    gridNumber.style.fontSize = '14px'
+                    patternLayer.appendChild(gridNumber)
+                }
             }
 
             for (let i = 0; i <= 9; i++) {
-                let element = document.createElementNS("http://www.w3.org/2000/svg",'line')
-                element.setAttribute('y1', 10*i*sqWidth)
-                element.setAttribute('x1', 0)
-                element.setAttribute('y2', 10*i*sqWidth)
-                element.setAttribute('x1', 90*sqWidth)
-                element.setAttribute('stroke', '#666')
-                element.setAttribute('stroke-width', '2px')
-                patternLayer.appendChild(element)
+                let line = document.createElementNS(svgns,'line')
+                line.setAttribute('y1', 0.5*Math.round(20*i*sqWidth))
+                line.setAttribute('x1', 0)
+                line.setAttribute('y2', 0.5*Math.round(20*i*sqWidth))
+                line.setAttribute('x1', 90*sqWidth)
+                line.setAttribute('stroke', '#666')
+                line.setAttribute('stroke-width', '2px')
+                patternLayer.appendChild(line)
+                if (i !== 0) {
+                    let gridNumber = document.createElementNS(svgns, 'text')
+                    gridNumber.setAttribute('class', 'noselect ylabel')
+                    gridNumber.innerHTML = `${10*i}`
+                    gridNumber.setAttribute('x', 3)
+                    gridNumber.setAttribute('y', 0.5*Math.round(20*i*sqWidth) - 3)
+                    gridNumber.setAttribute('fill', '#666')
+                    gridNumber.style.fontSize = '14px'
+                    patternLayer.appendChild(gridNumber)
+                }
             }
+
+            updateLabels(1, 0, 0)
         })
 
     </script>
