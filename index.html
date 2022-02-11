@@ -105,6 +105,7 @@
     </div>
     <script>
         let svgns = "http://www.w3.org/2000/svg"
+        let minX, minY, maxX, maxY
 
         function hexToRgb(hex) {
             var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -214,18 +215,12 @@
         })
 
         function updateLabels(scale, x, y) {
-            // let xlabels = document.getElementsByClassName('xlabel')
-            // for (let i = 0; i < xlabels.length; i++) {
-            //     xlabels[i].style.transform = `translate(${0}px, ${Math.max(0, -y/scale)}px)`
-            // }
-            let xlabels = document.querySelectorAll('.xlabel')
-            xlabels.forEach(label => {
+            document.querySelectorAll('.xlabel').forEach(label => {
                 label.style.transform = `translate(${0}px, ${Math.max(0, -y/scale)}px)`
             })
-            let ylabels = document.getElementsByClassName('ylabel')
-            for (let i = 0; i < ylabels.length; i++) {
-                ylabels[i].style.transform = `translate(${Math.min(9/8*svgWidth - 20, (svgWidth-x)/scale - 20)}px, 0px)`
-            }
+            document.querySelectorAll('.ylabel').forEach(label => {
+                label.style.transform = `translate(${Math.min(9/8*svgWidth - 20, (svgWidth-x)/scale - 20)}px, 0px)`
+            })
         }
 
         let scale = 1
@@ -293,6 +288,10 @@
         fetch('pattern.json').then(response => response.json())
         .then(pattern => {
             console.log(pattern);
+            minX = pattern.map(x => x.x).reduce((a, b) => a < b ? a : b)
+            maxX = pattern.map(x => x.x).reduce((a, b) => a > b ? a : b)
+            minY = pattern.map(x => x.y).reduce((a, b) => a < b ? a : b)
+            maxY = pattern.map(x => x.y).reduce((a, b) => a > b ? a : b)
             pattern.forEach(p => {
                 if (p.color.code in flossCounts) {
                     flossCounts[p.color.code] += 1
@@ -355,6 +354,15 @@
                     console.log(this)
                     if (!selected) {
                         selected = l
+                        let minX = pattern.filter(x => x.color.code == l).map(x => x.x).reduce((a, b) => a < b ? a : b)
+                        let maxX = pattern.filter(x => x.color.code == l).map(x => x.x).reduce((a, b) => a > b ? a : b)
+                        let minY = pattern.filter(x => x.color.code == l).map(x => x.y).reduce((a, b) => a < b ? a : b)
+                        let maxY = pattern.filter(x => x.color.code == l).map(x => x.y).reduce((a, b) => a > b ? a : b)
+                        let scale = Math.min(svgWidth/(sqWidth * (maxX - minX + 4)), svgHeight/(sqWidth * (maxY - minY + 4)))
+                        let e = -scale*sqWidth*(0.5*(minX + maxX + 1))+0.5*svgWidth
+                        let f = -scale*sqWidth*(0.5*(minY + maxY + 1))+0.5*svgHeight
+                        patternLayer.setAttribute('transform', `matrix(${scale} 0 0 ${scale} ${e} ${f})`)
+                        updateLabels(scale, e, f)
                         els = document.getElementsByClassName('cell')
                         for (let j = 0; j < els.length; j++) {
                             el = els[j]
@@ -448,7 +456,11 @@
                 }
             }
 
-            updateLabels(1, 0, 0)
+            let scale = Math.min(svgWidth/(sqWidth * (maxX - minX + 4)), svgHeight/(sqWidth * (maxY - minY + 4)))
+            let e = -scale*sqWidth*(0.5*(minX + maxX + 1))+0.5*svgWidth
+            let f = -scale*sqWidth*(0.5*(minY + maxY + 1))+0.5*svgHeight
+            patternLayer.setAttribute('transform', `matrix(${scale} 0 0 ${scale} ${e} ${f})`)
+            updateLabels(scale, e, f)
         })
 
     </script>
