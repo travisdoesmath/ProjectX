@@ -1,0 +1,89 @@
+html, body {
+    /* prevent pull-to-refresh on Chrome for Android */
+    overscroll-behavior-y: contain; 
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 600;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+}
+
+.dropdown-item {
+    margin:10px;
+}
+
+.noselect {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.layer {
+    position: relative;
+    top: 0;
+    left: 0;
+}
+
+.legendItem {
+    float: left;
+    margin: 10px;
+    text-align: center;
+    line-height: 250%;
+    pointer-events: all;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+#gridLayer {
+    pointer-events: none;
+}
+
+#pattern {
+    position: fixed;
+    top: 0;
+    left: 0;
+    /* shape-rendering: crispEdges; */
+    width: 100%;
+    height: 100%;
+}
+
+#overlay {
+    position: fixed;
+    height: 100%;
+    width: 100%;
+    pointer-events: none;
+}
+
+#legend {
+    background-color: #444;
+    position: absolute;
+    pointer-events: all;
+}
+
+.floss703 { fill: #66A647; color: #335323; }
+.floss702 { fill: #138D46; color: #094623; }
+.floss700 { fill: #007443; color: #003a21; }
+.floss973 { fill: #FFC617; color: #8b6800; }
+.floss743 { fill: #FBAD31; color: #935b02; }
+.floss445 { fill: #EDE66A; color: #999112; }
+.floss562 { fill: #1E8061; color: #0f4030; }
+.floss561 { fill: #386654; color: #1c332a; }
+.floss15 { fill: #C0DC94; color: #668a2d; }
+.floss352 { fill: #F26E66; color: #9e150d; }
+.floss606 { fill: #EE282B; color: #800a0b; }
+.floss608 { fill: #EF472A; color: #821b09; }
+.floss351 { fill: #EC404E; color: #880d17; }
+.floss761 { fill: #F69FA5; color: #b9111c; }
+.flossBlanc { fill: #FDFDFD; color: #7e7e7e; }
+.floss321 { fill: #BF2148; color: #5f1024; }
+.floss563 { fill: #67B68E; color: #2e6046; }
+
+.completed {
+    fill: #888 !important;
+}

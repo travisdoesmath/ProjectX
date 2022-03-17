@@ -114,6 +114,8 @@ svg.addEventListener("wheel", function(event) {
 svg.appendChild(patternLayer)
 let overlay = document.getElementById('overlay')
 let legend = document.getElementById('legend');
+let legendElements = document.getElementById('legend-elements');
+
 
 let flossCodes = {
     703: {color: '#66A647', symbol: '\u2229' },
@@ -137,7 +139,145 @@ let flossCodes = {
 
 let flossCounts = {}
 
-function updateLegend() {
+function updateLegend(flossCounts, pattern) {
+    legendElements.innerHTML = ""
+    flossLegendOrder = Object.keys(flossCounts).sort((a, b) => flossCounts[b] - flossCounts[a])
+
+    flossLegendOrder.forEach((l, i) => {
+        let element = document.createElement('li')
+        element.innerHTML = `<a class="dropdown-item" href="#" style="color: ${hexDarker(flossCodes[l].color)}">${l} ${flossCodes[l].symbol}</a>`
+        element.style.backgroundColor = flossCodes[l].color
+        if (selected && l != selected) {
+                element.style.opacity = 0.25
+        }
+        // element.style.color = hexDarker(flossCodes[l].color)
+
+        element.addEventListener('click', function() {
+            console.log(this)
+            if (!selected) {
+                selected = l
+                let minX = pattern.filter(x => x.color.code == l).map(x => x.x).reduce((a, b) => a < b ? a : b)
+                let maxX = pattern.filter(x => x.color.code == l).map(x => x.x).reduce((a, b) => a > b ? a : b)
+                let minY = pattern.filter(x => x.color.code == l).map(x => x.y).reduce((a, b) => a < b ? a : b)
+                let maxY = pattern.filter(x => x.color.code == l).map(x => x.y).reduce((a, b) => a > b ? a : b)
+                zoom(minX, maxX, minY, maxY)
+                els = document.getElementsByClassName('cell')
+                for (let j = 0; j < els.length; j++) {
+                    el = els[j]
+                    if (![...el.classList].includes(`floss${l}`)) {
+                        el.style.opacity = 0.25
+                    }
+                }
+
+                els = document.getElementsByClassName('legendItem')
+                for (let j = 0; j < els.length; j++) {
+                    el = els[j]
+                    if (![...el.classList].includes(`floss${l}`)) {
+                        el.style.opacity = 0.25
+                    }
+                }
+
+            } else {
+                selected = null
+                els = document.getElementsByClassName('cell')
+                for (let j = 0; j < els.length; j++) {
+                    els[j].style.opacity = 1
+                }
+                els = document.getElementsByClassName('legendItem')
+                for (let j = 0; j < els.length; j++) {
+                    els[j].style.opacity = 1
+                }
+            }
+            updateLegend(flossCounts, pattern);
+        })
+        legendElements.append(element);
+    })
+
+    
+
+    console.log(legend)
+
+//                  <li><a class="dropdown-item" href="#">Action</a></li>
+
+
+    
+
+
+    //legend.
+}
+
+function createLegend_OLD(flossCounts) {
+    
+
+    
+
+
+    console.log(flossCounts)
+    flossLegendOrder = Object.keys(flossCounts).sort((a, b) => flossCounts[b] - flossCounts[a])
+
+    let nLegendItems = Object.keys(flossCounts).length
+    let legendItemHeight = window.innerHeight / nLegendItems - 10
+    legend.style.width = `${2*legendItemHeight + 20}px`;
+
+    flossLegendOrder.forEach((l, i) => {
+        let element = document.createElement('div');
+        element.className = `legendItem floss${l}`;
+        element.style.backgroundColor = flossCodes[l].color
+        element.style.color = hexDarker(flossCodes[l].color)
+        element.style.left = `10px`;
+        // element.style.top = `${5 + i*(legendItemHeight+10)}px`;
+        element.style.height = `${legendItemHeight}px`;
+        element.style.width = `${2*legendItemHeight}px`;
+        element.style.fontSize = `${0.4*legendItemHeight}px`;
+        element.innerText = `${l} ${flossCodes[l].symbol}`
+        element.addEventListener('click', function(event) {
+            event.stopPropagation()
+            console.log(this)
+            if (!selected) {
+                selected = l
+                let minX = pattern.filter(x => x.color.code == l).map(x => x.x).reduce((a, b) => a < b ? a : b)
+                let maxX = pattern.filter(x => x.color.code == l).map(x => x.x).reduce((a, b) => a > b ? a : b)
+                let minY = pattern.filter(x => x.color.code == l).map(x => x.y).reduce((a, b) => a < b ? a : b)
+                let maxY = pattern.filter(x => x.color.code == l).map(x => x.y).reduce((a, b) => a > b ? a : b)
+                zoom(minX, maxX, minY, maxY)
+                els = document.getElementsByClassName('cell')
+                for (let j = 0; j < els.length; j++) {
+                    el = els[j]
+                    if (![...el.classList].includes(`floss${l}`)) {
+                        el.style.opacity = 0.25
+                    }
+                }
+
+                els = document.getElementsByClassName('legendItem')
+                for (let j = 0; j < els.length; j++) {
+                    el = els[j]
+                    if (![...el.classList].includes(`floss${l}`)) {
+                        el.style.opacity = 0.25
+                    }
+                }
+
+            } else {
+                selected = null
+                els = document.getElementsByClassName('cell')
+                for (let j = 0; j < els.length; j++) {
+                    els[j].style.opacity = 1
+                }
+                els = document.getElementsByClassName('legendItem')
+                for (let j = 0; j < els.length; j++) {
+                    els[j].style.opacity = 1
+                }
+            }
+        })
+        legend.append(element);
+    })
+    
+}
+
+// function updateLegend() {
+
+// }
+
+function updateLegend_OLD() {
     let legend = document.getElementById('legend')
     let legendItems = document.getElementsByClassName('legendItem');
     let nLegendItems = legendItems.length
@@ -156,8 +296,6 @@ function updateLegend() {
 
     }
 }
-
-window.addEventListener('resize', updateLegend)
 
 function zoom(minX, maxX, minY, maxY) {
     let duration = 500
@@ -250,64 +388,8 @@ fetch('pattern.json').then(response => response.json())
 
     })
 
-    console.log(flossCounts)
-    flossLegendOrder = Object.keys(flossCounts).sort((a, b) => flossCounts[b] - flossCounts[a])
-
-    let nLegendItems = Object.keys(flossCounts).length
-    let legendItemHeight = window.innerHeight / nLegendItems - 10
-    legend.style.width = `${2*legendItemHeight + 20}px`;
-
-    flossLegendOrder.forEach((l, i) => {
-        let element = document.createElement('div');
-        element.className = `legendItem floss${l}`;
-        element.style.backgroundColor = flossCodes[l].color
-        element.style.color = hexDarker(flossCodes[l].color)
-        element.style.left = `10px`;
-        // element.style.top = `${5 + i*(legendItemHeight+10)}px`;
-        element.style.height = `${legendItemHeight}px`;
-        element.style.width = `${2*legendItemHeight}px`;
-        element.style.fontSize = `${0.4*legendItemHeight}px`;
-        element.innerText = `${l} ${flossCodes[l].symbol}`
-        element.addEventListener('click', function() {
-            console.log(this)
-            if (!selected) {
-                selected = l
-                let minX = pattern.filter(x => x.color.code == l).map(x => x.x).reduce((a, b) => a < b ? a : b)
-                let maxX = pattern.filter(x => x.color.code == l).map(x => x.x).reduce((a, b) => a > b ? a : b)
-                let minY = pattern.filter(x => x.color.code == l).map(x => x.y).reduce((a, b) => a < b ? a : b)
-                let maxY = pattern.filter(x => x.color.code == l).map(x => x.y).reduce((a, b) => a > b ? a : b)
-                zoom(minX, maxX, minY, maxY)
-                els = document.getElementsByClassName('cell')
-                for (let j = 0; j < els.length; j++) {
-                    el = els[j]
-                    if (![...el.classList].includes(`floss${l}`)) {
-                        el.style.opacity = 0.25
-                    }
-                }
-
-                els = document.getElementsByClassName('legendItem')
-                for (let j = 0; j < els.length; j++) {
-                    el = els[j]
-                    if (![...el.classList].includes(`floss${l}`)) {
-                        el.style.opacity = 0.25
-                    }
-                }
-
-            } else {
-                selected = null
-                els = document.getElementsByClassName('cell')
-                for (let j = 0; j < els.length; j++) {
-                    els[j].style.opacity = 1
-                }
-                els = document.getElementsByClassName('legendItem')
-                for (let j = 0; j < els.length; j++) {
-                    els[j].style.opacity = 1
-                }
-            }
-        })
-        legend.append(element);
-        updateLegend();
-    })
+    updateLegend(flossCounts, pattern);
+    
 }).then(() => {
     for (let i = 0; i <= 90; i++) {
         let line = document.createElementNS(svgns,'line')

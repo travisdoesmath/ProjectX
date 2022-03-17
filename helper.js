@@ -20,7 +20,7 @@ function hexWashout(hex) {
 }
 
 function hexDarker(hex) {
-    let lambda = 0.6
+    let lambda = 0.3
     let rgb = hexToRgb(hex);
     return `rgb(${lambda * rgb.r},${lambda * rgb.g},${lambda * rgb.b})`
 }
